@@ -59,22 +59,27 @@ def make_request(method, endpoint, data=None):
         except:
             response = {}
 
-        # HTTP ERROR
+        # Backend Error
         if res.status_code != 200:
+
             st.error(
-                f"Backend Error: {res.status_code}"
+                f"Backend Error: "
+                f"{res.status_code}"
             )
+
             st.write(response)
             return None
 
-        # CUSTOM BACKEND ERROR
+        # Custom Error
         if (
             isinstance(response, dict)
             and "error" in response
         ):
+
             st.error(
                 f"❌ {response['error']}"
             )
+
             return None
 
         return response
@@ -85,6 +90,7 @@ def make_request(method, endpoint, data=None):
             "Server timeout. "
             "Render may be sleeping."
         )
+
         return None
 
     except Exception as e:
@@ -100,9 +106,7 @@ def make_request(method, endpoint, data=None):
 opt = st.sidebar.selectbox(
     "Choose Operation",
     [
-
         "add_expenses",
-        "update_expenses",
         "view_expenses",
         "delete_expenses",
         "search_expenses",
@@ -110,12 +114,11 @@ opt = st.sidebar.selectbox(
     ]
 )
 
-
 # =====================================
 # ADD EXPENSE
 # =====================================
 
-elif opt == "add_expenses":
+if opt == "add_expenses":
 
     st.header("➕ Add Expense")
 
@@ -194,6 +197,7 @@ elif opt == "add_expenses":
                 )
 
                 if response:
+
                     st.success(
                         response.get(
                             "msg",
@@ -272,6 +276,7 @@ elif opt == "delete_expenses":
         )
 
         if response:
+
             st.success(
                 response.get(
                     "msg",
@@ -334,55 +339,54 @@ elif opt == "analyze_expenses":
             "/analyze_spending"
         )
 
-        if not response:
-            st.stop()
+        if response:
 
-        total = response.get(
-            "total_spending",
-            {}
-        ).get("total", 0)
+            total = response.get(
+                "total_spending",
+                {}
+            ).get("total", 0)
 
-        category_data = response.get(
-            "category_spending",
-            []
-        )
-
-        st.success(
-            f"💰 Total Spending: ₹{total}"
-        )
-
-        if len(category_data) == 0:
-
-            st.warning(
-                "No expense data found"
+            category_data = response.get(
+                "category_spending",
+                []
             )
 
-        else:
-
-            df = pd.DataFrame(
-                category_data
+            st.success(
+                f"💰 Total Spending: ₹{total}"
             )
 
-            fig = px.bar(
-                df,
-                x="category",
-                y="total",
-                title="Category Spending"
-            )
+            if len(category_data) == 0:
 
-            st.plotly_chart(
-                fig,
-                use_container_width=True
-            )
+                st.warning(
+                    "No expense data found"
+                )
 
-            fig2 = px.pie(
-                df,
-                names="category",
-                values="total",
-                title="Expense Distribution"
-            )
+            else:
 
-            st.plotly_chart(
-                fig2,
-                use_container_width=True
-            )
+                df = pd.DataFrame(
+                    category_data
+                )
+
+                fig = px.bar(
+                    df,
+                    x="category",
+                    y="total",
+                    title="Category Spending"
+                )
+
+                st.plotly_chart(
+                    fig,
+                    use_container_width=True
+                )
+
+                fig2 = px.pie(
+                    df,
+                    names="category",
+                    values="total",
+                    title="Expense Distribution"
+                )
+
+                st.plotly_chart(
+                    fig2,
+                    use_container_width=True
+                )
