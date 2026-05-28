@@ -119,6 +119,46 @@ opt = st.sidebar.selectbox(
     ]
 )
 
+
+@app.get("/create_table")
+def create_table():
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+
+        query = """
+        CREATE TABLE IF NOT EXISTS expenses (
+            expense_id INT AUTO_INCREMENT PRIMARY KEY,
+            category VARCHAR(100),
+            amount DECIMAL(10,2),
+            payment_method VARCHAR(100),
+            expense_date DATE,
+            description TEXT
+        )
+        """
+
+        cursor.execute(query)
+        conn.commit()
+
+        return {
+            "msg":
+            "Expenses table created successfully"
+        }
+
+    except Exception as e:
+
+        return {
+            "error":
+            str(e)
+        }
+
+    finally:
+
+        cursor.close()
+        conn.close()
+
 # =====================================
 # ADD EXPENSE
 # =====================================
