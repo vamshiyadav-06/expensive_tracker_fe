@@ -30,6 +30,7 @@ def make_request(method, endpoint, data=None):
     url = f"{local_server}{endpoint}"
 
     try:
+
         if method == "GET":
             res = requests.get(url, timeout=60)
 
@@ -53,31 +54,50 @@ def make_request(method, endpoint, data=None):
                 timeout=60
             )
 
-        if res.status_code != 200:
-            st.error(
-                f"Backend Error: {res.status_code}"
-            )
-            st.write(res.text)
-            return None
-
         try:
-            return res.json()
-
+            response = res.json()
         except:
+            response = {}
+
+        # HTTP Error
+        if res.status_code != 200:
+
             st.error(
-                "Backend is waking up. "
-                "Wait 30 seconds and retry."
+                f"Backend Error: "
+                f"{res.status_code}"
             )
+
+            st.write(response)
+
             return None
+
+        # Backend custom error
+        if (
+            isinstance(response, dict)
+            and "error" in response
+        ):
+
+            st.error(
+                f"❌ {response['error']}"
+            )
+
+            return None
+
+        return response
 
     except requests.exceptions.Timeout:
+
         st.error(
-            "Server timeout. Render may be waking up."
+            "Server timeout. "
+            "Render may be sleeping."
         )
+
         return None
 
     except Exception as e:
+
         st.error(f"❌ Error: {e}")
+
         return None
 
 
@@ -160,6 +180,7 @@ if opt == "add_expenses":
                 or amount == 0
                 or payment_method == ""
             ):
+
                 st.warning(
                     "Please fill all required fields"
                 )
@@ -184,7 +205,7 @@ if opt == "add_expenses":
                     st.success(
                         response.get(
                             "msg",
-                            "Expense Added"
+                            "Expense Added Successfully"
                         )
                     )
 
@@ -227,14 +248,10 @@ elif opt == "update_expenses":
                 "description": exp[5]
             }
 
-            st.success(
-                "Expense Loaded"
-            )
+            st.success("Expense Loaded")
 
         else:
-            st.warning(
-                "Expense not found"
-            )
+            st.warning("Expense not found")
 
     if st.session_state.expense_data:
 
@@ -270,12 +287,9 @@ elif opt == "update_expenses":
             payload = {
                 "category": category,
                 "amount": amount,
-                "payment_method":
-                payment_method,
-                "expense_date":
-                expense_date,
-                "description":
-                description
+                "payment_method": payment_method,
+                "expense_date": expense_date,
+                "description": description
             }
 
             response = make_request(
@@ -314,22 +328,30 @@ elif opt == "view_expenses":
                 []
             )
 
-            df = pd.DataFrame(
-                data,
-                columns=[
-                    "ID",
-                    "Category",
-                    "Amount",
-                    "Payment",
-                    "Date",
-                    "Description"
-                ]
-            )
+            if len(data) == 0:
 
-            st.dataframe(
-                df,
-                use_container_width=True
-            )
+                st.warning(
+                    "No expenses found"
+                )
+
+            else:
+
+                df = pd.DataFrame(
+                    data,
+                    columns=[
+                        "ID",
+                        "Category",
+                        "Amount",
+                        "Payment",
+                        "Date",
+                        "Description"
+                    ]
+                )
+
+                st.dataframe(
+                    df,
+                    use_container_width=True
+                )
 
 # =====================================
 # DELETE EXPENSE
@@ -361,16 +383,14 @@ elif opt == "delete_expenses":
             )
 
 # =====================================
-# SEARCH EXPENSES
+# SEARCH EXPENSE
 # =====================================
 
 elif opt == "search_expenses":
 
     st.header("🔍 Search Expense")
 
-    search_text = st.text_input(
-        "Search"
-    )
+    search_text = st.text_input("Search")
 
     if st.button("Search"):
 
@@ -383,109 +403,6 @@ elif opt == "search_expenses":
 
             data = response.get(
                 "search_result",
-                []
-            )
-
-            df = pd.DataFrame(
-                data,
-                columns=[
-                    "ID",
-                    "Category",
-                    "Amount",
-                    "Payment",
-                    "Date",
-                    "Description"
-                ]
-            )
-
-            st.dataframe(df)
-
-# =====================================
-# SORT EXPENSES
-# =====================================
-
-elif opt == "sort_expenses":
-
-    st.header("📊 Sort Expenses")
-
-    column = st.selectbox(
-        "Sort By",
-        [
-            "Title",
-            "Amount",
-            "Category"
-        ]
-    )
-
-    order = st.selectbox(
-        "Order",
-        [
-            "Asc",
-            "Desc"
-        ]
-    )
-
-    if st.button("Sort"):
-
-        response = make_request(
-            "GET",
-            f"/sort_exp/{column}/{order}"
-        )
-
-        if response:
-
-            data = response.get(
-                "sorted_expenses",
-                []
-            )
-
-            df = pd.DataFrame(
-                data,
-                columns=[
-                    "ID",
-                    "Category",
-                    "Amount",
-                    "Payment",
-                    "Date",
-                    "Description"
-                ]
-            )
-
-            st.dataframe(df)
-
-# =====================================
-# FILTER EXPENSES
-# =====================================
-
-elif opt == "filter_expenses":
-
-    st.header("📂 Filter Expense")
-
-    category = st.selectbox(
-        "Category",
-        [
-            "Food 🍔",
-            "Travel ✈️",
-            "Shopping 🛍️",
-            "Bills 💡",
-            "Entertainment 🎬",
-            "Health 🏥",
-            "Education 📚",
-            "Others 📦"
-        ]
-    )
-
-    if st.button("Filter"):
-
-        response = make_request(
-            "GET",
-            f"/filter_exp/{category}"
-        )
-
-        if response:
-
-            data = response.get(
-                "filtered_expenses",
                 []
             )
 
@@ -518,19 +435,30 @@ elif opt == "analyze_expenses":
             "/analyze_spending"
         )
 
-        if response:
+        if not response:
+            st.stop()
 
-            total = response[
-                "total_spending"
-            ]["total"]
+        total = response.get(
+            "total_spending",
+            {}
+        ).get("total", 0)
 
-            category_data = response[
-                "category_spending"
-            ]
+        category_data = response.get(
+            "category_spending",
+            []
+        )
 
-            st.success(
-                f"💰 Total Spending: ₹{total}"
+        st.success(
+            f"💰 Total Spending: ₹{total}"
+        )
+
+        if len(category_data) == 0:
+
+            st.warning(
+                "No expense data found"
             )
+
+        else:
 
             df = pd.DataFrame(
                 category_data
