@@ -21,11 +21,7 @@ st.title("💰 Expense Management System")
 # BACKEND URL
 # =====================================
 
-# Local
-# local_server = "http://localhost:8000"
-
-# Render URL (change later)
-local_server = "http://localhost:8000"
+local_server = "https://expensive-track-backend.onrender.com"
 
 
 # =====================================
@@ -107,7 +103,9 @@ if opt == "add_expenses":
                 or amount == 0
                 or payment_method == ""
             ):
-                st.warning("⚠️ Please fill all required details")
+                st.warning(
+                    "⚠️ Please fill all required details"
+                )
 
             else:
 
@@ -120,6 +118,7 @@ if opt == "add_expenses":
                 }
 
                 try:
+
                     res = requests.post(
                         f"{local_server}/add_expense",
                         json=new_data
@@ -163,7 +162,10 @@ elif opt == "update_expenses":
 
             data = res.json()
 
-            if data["expense_data"]:
+            if (
+                "expense_data" in data
+                and data["expense_data"]
+            ):
 
                 exp = data["expense_data"]
 
@@ -215,11 +217,11 @@ elif opt == "update_expenses":
         if st.button("🔄 Update Expense"):
 
             updated_data = {
-                "c": category,
-                "a": amount,
-                "p": payment_method,
-                "e": expense_date,
-                "d": description
+                "category": category,
+                "amount": amount,
+                "payment_method": payment_method,
+                "expense_date": expense_date,
+                "description": description
             }
 
             try:
@@ -272,7 +274,10 @@ elif opt == "view_expenses":
                 ]
             )
 
-            st.dataframe(df, use_container_width=True)
+            st.dataframe(
+                df,
+                use_container_width=True
+            )
 
         except Exception as e:
             st.error(f"❌ Error: {e}")
@@ -348,9 +353,14 @@ elif opt == "search_expenses":
             )
 
             if df.empty:
-                st.warning("No matching expenses found")
+                st.warning(
+                    "No matching expenses found"
+                )
             else:
-                st.dataframe(df, use_container_width=True)
+                st.dataframe(
+                    df,
+                    use_container_width=True
+                )
 
         except Exception as e:
             st.error(f"❌ Error: {e}")
@@ -398,7 +408,10 @@ elif opt == "sort_expenses":
                 ]
             )
 
-            st.dataframe(df, use_container_width=True)
+            st.dataframe(
+                df,
+                use_container_width=True
+            )
 
         except Exception as e:
             st.error(f"❌ Error: {e}")
@@ -453,7 +466,10 @@ elif opt == "filter_expenses":
             if df.empty:
                 st.warning("No expenses found")
             else:
-                st.dataframe(df, use_container_width=True)
+                st.dataframe(
+                    df,
+                    use_container_width=True
+                )
 
         except Exception as e:
             st.error(f"❌ Error: {e}")
@@ -479,15 +495,18 @@ elif opt == "analyze_expenses":
 
             total = data["total_spending"]["total"]
 
-            category_data = data["category_spending"]
+            category_data = data[
+                "category_spending"
+            ]
 
             st.success(
                 f"💰 Total Spending: ₹{total}"
             )
 
-            df = pd.DataFrame(category_data)
+            df = pd.DataFrame(
+                category_data
+            )
 
-            # Bar Chart
             fig = px.bar(
                 df,
                 x="category",
@@ -500,7 +519,6 @@ elif opt == "analyze_expenses":
                 use_container_width=True
             )
 
-            # Pie Chart
             fig2 = px.pie(
                 df,
                 names="category",
