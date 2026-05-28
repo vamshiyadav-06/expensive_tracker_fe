@@ -19,7 +19,7 @@ st.title("💰 Expense Management System")
 # BACKEND URL
 # =====================================
 
-local_server = "https://expensive-track-backend.onrender.com"
+local_server = st.secrets["server_url"]
 
 # =====================================
 # API REQUEST FUNCTION
