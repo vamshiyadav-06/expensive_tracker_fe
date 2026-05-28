@@ -110,35 +110,6 @@ opt = st.sidebar.selectbox(
     ]
 )
 
-# =====================================
-# CREATE TABLE
-# =====================================
-
-if opt == "create_table":
-
-    st.header("🛠️ Create Table")
-
-    st.write(
-        "Create expenses table "
-        "in database"
-    )
-
-    if st.button(
-        "Create Expenses Table"
-    ):
-
-        response = make_request(
-            "GET",
-            "/create_table"
-        )
-
-        if response:
-            st.success(
-                response.get(
-                    "msg",
-                    "Table Created"
-                )
-            )
 
 # =====================================
 # ADD EXPENSE
