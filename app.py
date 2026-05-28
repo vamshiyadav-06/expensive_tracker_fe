@@ -100,7 +100,7 @@ def make_request(method, endpoint, data=None):
 opt = st.sidebar.selectbox(
     "Choose Operation",
     [
-        "create_table",
+
         "add_expenses",
         "update_expenses",
         "view_expenses",
