@@ -59,28 +59,22 @@ def make_request(method, endpoint, data=None):
         except:
             response = {}
 
-        # HTTP Error
+        # HTTP ERROR
         if res.status_code != 200:
-
             st.error(
-                f"Backend Error: "
-                f"{res.status_code}"
+                f"Backend Error: {res.status_code}"
             )
-
             st.write(response)
-
             return None
 
-        # Backend custom error
+        # CUSTOM BACKEND ERROR
         if (
             isinstance(response, dict)
             and "error" in response
         ):
-
             st.error(
                 f"❌ {response['error']}"
             )
-
             return None
 
         return response
@@ -91,13 +85,11 @@ def make_request(method, endpoint, data=None):
             "Server timeout. "
             "Render may be sleeping."
         )
-
         return None
 
     except Exception as e:
 
         st.error(f"❌ Error: {e}")
-
         return None
 
 
@@ -108,62 +100,51 @@ def make_request(method, endpoint, data=None):
 opt = st.sidebar.selectbox(
     "Choose Operation",
     [
+        "create_table",
         "add_expenses",
         "update_expenses",
         "view_expenses",
         "delete_expenses",
         "search_expenses",
-        "sort_expenses",
-        "filter_expenses",
         "analyze_expenses"
     ]
 )
 
+# =====================================
+# CREATE TABLE
+# =====================================
 
-@app.get("/create_table")
-def create_table():
+if opt == "create_table":
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    st.header("🛠️ Create Table")
 
-    try:
+    st.write(
+        "Create expenses table "
+        "in database"
+    )
 
-        query = """
-        CREATE TABLE IF NOT EXISTS expenses (
-            expense_id INT AUTO_INCREMENT PRIMARY KEY,
-            category VARCHAR(100),
-            amount DECIMAL(10,2),
-            payment_method VARCHAR(100),
-            expense_date DATE,
-            description TEXT
+    if st.button(
+        "Create Expenses Table"
+    ):
+
+        response = make_request(
+            "GET",
+            "/create_table"
         )
-        """
 
-        cursor.execute(query)
-        conn.commit()
-
-        return {
-            "msg":
-            "Expenses table created successfully"
-        }
-
-    except Exception as e:
-
-        return {
-            "error":
-            str(e)
-        }
-
-    finally:
-
-        cursor.close()
-        conn.close()
+        if response:
+            st.success(
+                response.get(
+                    "msg",
+                    "Table Created"
+                )
+            )
 
 # =====================================
 # ADD EXPENSE
 # =====================================
 
-if opt == "add_expenses":
+elif opt == "add_expenses":
 
     st.header("➕ Add Expense")
 
@@ -173,14 +154,14 @@ if opt == "add_expenses":
             "📂 Category",
             [
                 "",
-                "Food 🍔",
-                "Travel ✈️",
-                "Shopping 🛍️",
-                "Bills 💡",
-                "Entertainment 🎬",
-                "Health 🏥",
-                "Education 📚",
-                "Others 📦"
+                "Food",
+                "Travel",
+                "Shopping",
+                "Bills",
+                "Entertainment",
+                "Health",
+                "Education",
+                "Others"
             ]
         )
 
@@ -193,11 +174,11 @@ if opt == "add_expenses":
             "💳 Payment Method",
             [
                 "",
-                "Cash 💵",
-                "UPI 📲",
-                "Credit Card 💳",
-                "Debit Card 🏦",
-                "Net Banking 🌐"
+                "Cash",
+                "UPI",
+                "Credit Card",
+                "Debit Card",
+                "Net Banking"
             ]
         )
 
@@ -222,7 +203,7 @@ if opt == "add_expenses":
             ):
 
                 st.warning(
-                    "Please fill all required fields"
+                    "Fill all required fields"
                 )
 
             else:
@@ -245,106 +226,9 @@ if opt == "add_expenses":
                     st.success(
                         response.get(
                             "msg",
-                            "Expense Added Successfully"
+                            "Expense Added"
                         )
                     )
-
-# =====================================
-# UPDATE EXPENSE
-# =====================================
-
-elif opt == "update_expenses":
-
-    st.header("✏️ Update Expense")
-
-    if "expense_data" not in st.session_state:
-        st.session_state.expense_data = None
-
-    expense_id = st.number_input(
-        "Expense ID",
-        min_value=1,
-        step=1
-    )
-
-    if st.button("Fetch Expense"):
-
-        response = make_request(
-            "GET",
-            f"/get_single_expense/{expense_id}"
-        )
-
-        if (
-            response
-            and response.get("expense_data")
-        ):
-
-            exp = response["expense_data"]
-
-            st.session_state.expense_data = {
-                "category": exp[1],
-                "amount": float(exp[2]),
-                "payment_method": exp[3],
-                "expense_date": str(exp[4]),
-                "description": exp[5]
-            }
-
-            st.success("Expense Loaded")
-
-        else:
-            st.warning("Expense not found")
-
-    if st.session_state.expense_data:
-
-        exp = st.session_state.expense_data
-
-        category = st.text_input(
-            "Category",
-            exp["category"]
-        )
-
-        amount = st.number_input(
-            "Amount",
-            value=exp["amount"]
-        )
-
-        payment_method = st.text_input(
-            "Payment Method",
-            exp["payment_method"]
-        )
-
-        expense_date = st.text_input(
-            "Expense Date",
-            exp["expense_date"]
-        )
-
-        description = st.text_area(
-            "Description",
-            exp["description"]
-        )
-
-        if st.button("Update Expense"):
-
-            payload = {
-                "category": category,
-                "amount": amount,
-                "payment_method": payment_method,
-                "expense_date": expense_date,
-                "description": description
-            }
-
-            response = make_request(
-                "PUT",
-                f"/update_expense/{expense_id}",
-                payload
-            )
-
-            if response:
-                st.success(
-                    response.get(
-                        "updated_msg",
-                        "Expense Updated"
-                    )
-                )
 
 # =====================================
 # VIEW EXPENSES
@@ -354,7 +238,9 @@ elif opt == "view_expenses":
 
     st.header("📋 View Expenses")
 
-    if st.button("View Expenses"):
+    if st.button(
+        "View Expenses"
+    ):
 
         response = make_request(
             "GET",
@@ -430,7 +316,9 @@ elif opt == "search_expenses":
 
     st.header("🔍 Search Expense")
 
-    search_text = st.text_input("Search")
+    search_text = st.text_input(
+        "Search"
+    )
 
     if st.button("Search"):
 
